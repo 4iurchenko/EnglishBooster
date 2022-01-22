@@ -8,15 +8,6 @@ Then, I repeat this process with the other 10, 20, 50 words, with some repetitio
   to know it better and better
 """
 
-"""
-# Engineering view
-1. A component of main class which draws a main window (eng_complex_interface.py or eng_autorefresh.py)
-2. Class(es) for draw the web page with a video content (eng_plays_automatically.py)
-3. Class Timer for destroying / recreating page with the next word (eng_autorefresh.py)
-4. The list of words with links to the proper youtube video (I need to prepare it)
-"""
-
-
 import os
 import sys
 from PyQt5.Qt import QApplication, QMainWindow
@@ -74,7 +65,7 @@ class ShowMainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    LiveGraph = ShowMainWindow()
+    NewMainWindow = ShowMainWindow()
 
     sys.exit(app.exec_())
 
