@@ -4,6 +4,8 @@ from PyQt5.Qt import QApplication, QMainWindow
 from PyQt5.QtCore import QRect, QUrl, QCoreApplication, QMetaObject, QTimer
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
+
+
 class Ui_BTC_LiveGraph(object):
     def setupUi(self, widget):
         widget.setObjectName("BTC_LiveGraph")
