@@ -18,7 +18,7 @@ def mask_between( s, first, last ):
     except ValueError:
         return ""
 
-sa = gspread.service_account(filename="client_secret_1.json")
+sa = gspread.service_account(filename="secret_client.json")
 sh = sa.open("To-do list")
 wks = sh.worksheet("ToDo")
 print("Rows:", wks.row_count)
