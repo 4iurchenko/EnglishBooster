@@ -24,18 +24,10 @@ from PyQt5.QtCore import QUrl
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEnginePage, QWebEngineSettings
 from PyQt5.QtWidgets import QApplication
 
-words = [
-    ["poverty", "https://www.youtube.com/embed/15-DE4i30m8?autoplay=1&mute=0&start=202&end=212;rel=0"],
-    ["promenade", "https://www.youtube.com/embed/qM0uOAqrVb0?autoplay=1&mute=0&start=653&end=663;rel=0"],
-    ["sameness", "https://www.youtube.com/embed/o1Z4F4e2Bw4?autoplay=1&mute=0&start=589&end=599;rel=0"],
-    ["allay", "https://www.youtube.com/embed/a0KtqDTmDa4?autoplay=1&mute=0&start=2731&end=2741;rel=0"],
-    ["ramble", "https://www.youtube.com/embed/xveWHTbZ2_o?autoplay=1&mute=0&start=238&end=248;rel=0"],
-    ["vivacity", "https://www.youtube.com/embed/aV-5NXwo19o?autoplay=1&mute=0&start=804&end=814;rel=0"],
-    ["greed", "https://www.youtube.com/embed/qZjr2CIEflc?autoplay=1&mute=0&start=340&end=350;rel=0"],
-    ["stroll", "https://www.youtube.com/embed/7xeFP0SEDdc?autoplay=1&mute=0&start=2414&end=2424;rel=0"],
-    ["exacerbate", "https://www.youtube.com/embed/15-DE4i30m8?autoplay=1&mute=0&start=445&end=455;rel=0"],
-    ["prosperity", "https://www.youtube.com/embed/87AEeLpodnE?autoplay=1&mute=0&start=759&end=769;rel=0"]
-]
+import eng_gen_data as gen_data
+
+app_gen_data = gen_data.gen_data()
+app_config = gen_data.get_config()
 
 class YouTubePlayer(QWidget):
     def __init__(self):
@@ -50,35 +42,77 @@ class YouTubePlayer(QWidget):
         topLayout = QHBoxLayout()
         self.layout.addLayout(topLayout)
 
-        label = QLabel('Enter Video Id: ')
-        self.input = QLineEdit()
-        self.input.installEventFilter(self)
-        self.input.setText("test test")
+        self.gen_data = app_gen_data
+        self.word_num = 0
 
-        topLayout.addWidget(label, 1)
-        topLayout.addWidget(self.input, 9)
+        self.video_duration = app_config["vid_duration"]
+
+        buttonAddPlayer = QPushButton('&Your language will be IELTS 8.0', clicked=self.restartVideo)
+        self.layout.addWidget(buttonAddPlayer)
+
+        label_synonyms = QLabel('S: ')
+        self.input_synonyms = QLineEdit()
+        self.input_synonyms.installEventFilter(self)
+        self.input_synonyms.setText(" , ".join(self.gen_data[0][2]))
+
+        topLayout.addWidget(label_synonyms, 1)
+        topLayout.addWidget(self.input_synonyms, 9)
+
+        label_definition = QLabel('D: ')
+        self.input_definition = QLineEdit()
+        self.input_definition.installEventFilter(self)
+        self.input_definition.setText(self.gen_data[0][3])
+
+        topLayout.addWidget(label_definition, 1)
+        topLayout.addWidget(self.input_definition, 9)
+
+        label_example = QLabel('Ex: ')
+        self.input_example = QLineEdit()
+        self.input_example.installEventFilter(self)
+        self.input_example.setText(self.gen_data[0][4])
+
+        topLayout.addWidget(label_example, 1)
+        topLayout.addWidget(self.input_example, 9)
 
         self.webview = self.addWebView()
 
         buttonLayout = QHBoxLayout()
         self.layout.addLayout(buttonLayout)
 
-        
-        self.word_num = 1
+
         self._updator = QTimer(self)
         self._updator.setSingleShot(False)
         self._updator.timeout.connect(self.reload_next)
 
-        self._updator.start(8000)
-        
+        self._updator.start(self.video_duration)
+
+
+    def restartVideo(self):
+        #self.word_num += 1
+        #self.input_synonyms.setText(str(self.word_num))
+
+        self.word_num = 0
+        self._updator = QTimer(self)
+        self._updator.setSingleShot(False)
+        self._updator.timeout.connect(self.reload_next)
+        self._updator.start(self.video_duration)
+
 
     def reload_next(self):
-        self.word_num += 1
-        if self.word_num >= len(words):
-            self._updator.stop()
+        if self.word_num < len(self.gen_data)-1:
+            self.word_num += 1
+            url = self.gen_data[self.word_num][1]
+            self.webview.load(QUrl(url))
+            self.webview.show()
 
-        self.webview.load(QUrl(words[self.word_num][1]))
-        self.webview.show()
+            self.input_synonyms.setText(" , ".join(self.gen_data[self.word_num][2]))
+            self.input_definition.setText(self.gen_data[self.word_num][3])
+            self.input_example.setText(self.gen_data[self.word_num][4])
+            return 0
+        else:
+            self._updator.stop()
+            self._updator.disconnect()
+            return 1
 
     def addWebView(self):
         self.webview = QWebEngineView()
@@ -88,12 +122,12 @@ class YouTubePlayer(QWidget):
         self.webpage.settings().setAttribute(QWebEngineSettings.PlaybackRequiresUserGesture, False)
 
         self.webview.setPage(self.webpage)
-        self.webview.load(QUrl(words[0][1]))
+        self.webview.load(QUrl(self.gen_data[0][1]))
         self.layout.addWidget(self.webview)
         return self.webview
 
 
-class YouTubeWindow(QWidget):
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("YouTube Video Player")
@@ -102,9 +136,6 @@ class YouTubeWindow(QWidget):
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-
-        buttonAddPlayer = QPushButton('&Add Player')
-        self.layout.addWidget(buttonAddPlayer)
 
         self.videoGrid = QGridLayout()
         self.layout.addLayout(self.videoGrid)
@@ -133,13 +164,11 @@ class YouTubeWindow(QWidget):
             }    
         """)
 
-if __name__ == "__main__":
-    #app = QApplication(sys.argv)
-    #NewMainWindow = YouTubePlayer()
 
+if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    window = YouTubeWindow()
+    window = MainWindow()
     window.show()
 
     try:

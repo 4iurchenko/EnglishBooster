@@ -44,7 +44,7 @@ class GetWord():
 words = [
     ["poverty", "https://www.youtube.com/embed/15-DE4i30m8?autoplay=1&mute=0&start=202&end=212;rel=0"]
 ]
-
+"""
 for i in words:
     word = i[0]
     j = GetWord(word)
@@ -52,4 +52,5 @@ for i in words:
     print("Definition: ", j.getDefinition())
     print("Example: ", j.getExample())
     print("Synonyms :", j.getSynonyms())
+"""
 
