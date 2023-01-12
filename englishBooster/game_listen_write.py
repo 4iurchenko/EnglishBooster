@@ -1,5 +1,5 @@
-__version__ = 'v1.1'
-__author__ = 'Iurii'
+__version__ = 'v0.1'
+__author__ = 'Yurri'
 
 #import os
 import sys
@@ -9,12 +9,14 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEngi
 import random
 import json
 filename = "databases/youtube_words_1.txt"
+log_file = "logs/listen_write.log"
 
 app_config = {}
-app_config["cnt_study_words"] = 6
+app_config["cnt_study_words"] = 3
 app_config["vid_duration"] = 13000
 app_config["start_before_sec"] = 5
 app_config["end_after_sec"] = 5
+app_config["is_word_shown"] = 0
 
 list_words = []
 with open(filename, 'r') as file1:
@@ -37,22 +39,25 @@ for i in random_list:
     result["url"] = "https://www.youtube.com/embed/{vid}?autoplay=1&mute=0&start={start}&end={end};rel=0".format(vid = random_video["vid"], start = int(random_video["start"])-app_config["start_before_sec"], end = int(random_video["end"])+app_config["end_after_sec"])
     list_words.append(result)
 
-print(list_words)
-
 decorator_gen_data = []
 for i in list_words:
-    j = []
-    j.append(i["word"])  #word
-    j.append(i["url"]) #url
-    j.append(i["phrase"]) #synonym
-    j.append(i["word"]) #definition
-    j.append("") #example
-
+    j = {}
+    j["word"] = i["word"]
+    j["url"] = i["url"]
+    j["phrase"] = i["phrase"]
     decorator_gen_data.append(j)
 
-print(decorator_gen_data)
-print(len(decorator_gen_data))
+#print(decorator_gen_data)
+#print(len(decorator_gen_data))
+import os
 
+def clearConsole():
+    command = 'clear'
+    if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
+        command = 'cls'
+    os.system(command)
+
+clearConsole()
 
 
 
@@ -62,6 +67,9 @@ class YouTubePlayer(QWidget):
 
         defaultSettings = QWebEngineSettings.globalSettings()
         defaultSettings.setFontSize(QWebEngineSettings.MinimumFontSize, 28)
+
+        self.correct_words = []
+        self.incorrect_words = []
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -74,74 +82,86 @@ class YouTubePlayer(QWidget):
 
         self.video_duration = app_config["vid_duration"]
 
-        buttonAddPlayer = QPushButton('&Your language will be IELTS 8.0', clicked=self.restartVideo)
+        buttonAddPlayer = QPushButton('&Next..', clicked=self.reload_next)
         self.layout.addWidget(buttonAddPlayer)
 
-        label_synonyms = QLabel('S: ')
-        self.input_synonyms = QLineEdit()
-        self.input_synonyms.installEventFilter(self)
-        self.input_synonyms.setText(self.gen_data[0][2])
+        label_A = QLabel('Enter a correct word')
+        self.input_A = QLineEdit()
+        self.input_A.installEventFilter(self)
+        #self.input_A.setText(self.gen_data[0]["word"])
 
-        topLayout.addWidget(label_synonyms, 1)
-        topLayout.addWidget(self.input_synonyms, 9)
+        topLayout.addWidget(label_A, 1)
+        topLayout.addWidget(self.input_A, 9)
 
-        label_definition = QLabel('D: ')
-        self.input_definition = QLineEdit()
-        self.input_definition.installEventFilter(self)
-        self.input_definition.setText(self.gen_data[0][3])
+        label_B = QLabel('Feedback')
+        self.input_B = QLineEdit()
+        self.input_B.installEventFilter(self)
+        #self.input_B.setText(self.gen_data[0]["word"])
 
-        topLayout.addWidget(label_definition, 1)
-        topLayout.addWidget(self.input_definition, 9)
+        topLayout.addWidget(label_B, 1)
+        topLayout.addWidget(self.input_B, 9)
 
-        label_example = QLabel('Ex: ')
-        self.input_example = QLineEdit()
-        self.input_example.installEventFilter(self)
-        self.input_example.setText(self.gen_data[0][4])
+        label_C = QLabel('Hint')
+        self.input_C = QLineEdit()
+        self.input_C.installEventFilter(self)
+        if (app_config["is_word_shown"]==1):
+            self.input_C.setText(self.gen_data[0]["word"])
 
-        topLayout.addWidget(label_example, 1)
-        topLayout.addWidget(self.input_example, 9)
+        topLayout.addWidget(label_C, 1)
+        topLayout.addWidget(self.input_C, 9)
 
-        self.webview = self.addWebView()
+        self.webview = self.addWebView(url=self.gen_data[0]["url"])
 
         buttonLayout = QHBoxLayout()
         self.layout.addLayout(buttonLayout)
-
-
-        self._updator = QTimer(self)
-        self._updator.setSingleShot(False)
-        self._updator.timeout.connect(self.reload_next)
-
-        self._updator.start(self.video_duration)
-
-
-    def restartVideo(self):
-        #self.word_num += 1
-        #self.input_synonyms.setText(str(self.word_num))
-
-        self.word_num = 0
-        self._updator = QTimer(self)
-        self._updator.setSingleShot(False)
-        self._updator.timeout.connect(self.reload_next)
-        self._updator.start(self.video_duration)
-
+        print(self.word_num)
 
     def reload_next(self):
-        if self.word_num < len(self.gen_data)-1:
-            self.word_num += 1
-            url = self.gen_data[self.word_num][1]
-            self.webview.load(QUrl(url))
-            self.webview.show()
+        self.word_num += 1 #iterate to the next word
 
-            self.input_synonyms.setText(self.gen_data[self.word_num][2])
-            self.input_definition.setText(self.gen_data[self.word_num][3])
-            self.input_example.setText(self.gen_data[self.word_num][4])
-            return 0
+        #adding statistic
+        if (self.input_A.text() == self.gen_data[self.word_num-1]["word"]):
+            self.input_B.setText("+")
+            self.correct_words.append(self.gen_data[self.word_num-1]["word"]) #add + words to the account
         else:
-            self._updator.stop()
-            self._updator.disconnect()
-            return 1
+            self.input_B.setText("..")
+            self.incorrect_words.append(self.gen_data[self.word_num-1]["word"]) #add - words to the account
 
-    def addWebView(self):
+        if self.word_num == len(self.gen_data):
+            self.writeResults()
+            sys.exit(app.exec_())
+
+        if self.word_num == len(self.gen_data)-1:
+            self.input_C.setText("It is the last word in a queue:)")
+
+        self.input_A.setText("") #clear input
+
+        if (app_config["is_word_shown"] == 1):
+            self.input_C.setText(self.gen_data[self.word_num]["word"]) #sets current word as a hint
+
+        url = self.gen_data[self.word_num]["url"]
+        self.webview.load(QUrl(url))
+        self.webview.show()
+
+    def writeResults(self):
+        percentage_correct = str(
+            int(100 * len(self.correct_words) / (len(self.correct_words) + len(self.incorrect_words))))
+        text_correct_words = ", ".join(self.correct_words)
+        text_incorrect_words = ", ".join(self.incorrect_words)
+
+        with open(log_file, "a") as f:
+            f.write('\n')
+            f.write("\nBest words are " + text_correct_words)
+            f.write("\nMistakes are in " + text_incorrect_words)
+            f.write("\nFinal result of right answers is " + percentage_correct)
+
+            print("\nBest words are " + text_correct_words)
+            print("\nMistakes are in " + text_incorrect_words)
+            print("\nFinal result of right answers is " + percentage_correct)
+
+        print("Log file with the results updated")
+
+    def addWebView(self, url):
         self.webview = QWebEngineView()
         self.profile = QWebEngineProfile("my_profile", self.webview)
         self.profile.defaultProfile().setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
@@ -149,7 +169,7 @@ class YouTubePlayer(QWidget):
         self.webpage.settings().setAttribute(QWebEngineSettings.PlaybackRequiresUserGesture, False)
 
         self.webview.setPage(self.webpage)
-        self.webview.load(QUrl(self.gen_data[0][1]))
+        self.webview.load(QUrl(url))
         self.layout.addWidget(self.webview)
         return self.webview
 
