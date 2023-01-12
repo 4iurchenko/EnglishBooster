@@ -1,6 +1,7 @@
 # EnglishVocabularyBooster
 
 This is the environment that can boost the vocabulary. It plays youtube videos for the specific (preconfigured) words.
+
 ![Alt text](./app_example.png?raw=true "Application example")
 
 ## Installation
