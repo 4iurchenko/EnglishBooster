@@ -3,7 +3,7 @@ import json
 
 class GetWord():
     def __init__(self, word, language = "en-gb"):
-        with open('secret_oxford.json') as f:
+        with open('../secret_oxford.json') as f:
             oxford_secret = json.load(f)
             self.app_id = oxford_secret["app_id"]
             self.app_key = oxford_secret["app_key"]

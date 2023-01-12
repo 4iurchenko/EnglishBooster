@@ -2,7 +2,7 @@ import gspread
 import os
 # Link to configure google here https://www.youtube.com/results?search_query=python+google+sheet+2021
 
-def find_between( s, first, last ):
+def find_between(s, first, last):
     try:
         start = s.index( first ) + len( first )
         end = s.index( last, start )
@@ -18,7 +18,7 @@ def mask_between( s, first, last ):
     except ValueError:
         return ""
 
-sa = gspread.service_account(filename="secret_client.json")
+sa = gspread.service_account(filename="../secret_client.json")
 sh = sa.open("To-do list")
 wks = sh.worksheet("ToDo")
 print("Rows:", wks.row_count)

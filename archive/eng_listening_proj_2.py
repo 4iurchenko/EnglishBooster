@@ -11,22 +11,34 @@ Then, I repeat this process with the other 10, 20, 50 words, with some repetitio
 __version__ = 'v1.1'
 __author__ = 'Iurii'
 
-import os
+#import os
 import sys
-from PyQt5.Qt import QApplication, QMainWindow
-from PyQt5.QtCore import QRect, QUrl, QCoreApplication, QMetaObject, QTimer
-from PyQt5.QtCore import Qt, QUrl, QEvent
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QGridLayout, QHBoxLayout, QVBoxLayout
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWebEngineWidgets import QWebEngineSettings, QWebEngineView
-
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QTimer, Qt, QUrl
+from PyQt5.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QGridLayout, QHBoxLayout, QVBoxLayout, QApplication
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEnginePage, QWebEngineSettings
-from PyQt5.QtWidgets import QApplication
 
 import eng_gen_data as gen_data
 
-app_gen_data = gen_data.gen_data()
+# external dependencies
+app_gen_data = gen_data.get_spreedsheet_data(sh_name = "To-do list", wks_name = "ListeningWorld", zone = "A4:E10")[0]
+app_gen_data = gen_data.fit_sublists_to_size(list = app_gen_data, size = 5, filler = '')
+
+app_gen_data = [x for x in app_gen_data if (x[0] == "TRUE")]
+print(app_gen_data)
+
+decorator_gen_data = []
+for i in app_gen_data:
+    j = []
+    j.append(i[2])  #word
+    j.append(gen_data.get_youtube_url(short_url = i[4], vid_duration = int(gen_data.get_config()["vid_duration"]))) #url
+    j.append("") #synonym
+    j.append("") #definition
+    j.append("") #example
+
+    decorator_gen_data.append(j)
+
+print(decorator_gen_data)
+
 app_config = gen_data.get_config()
 
 class YouTubePlayer(QWidget):
@@ -42,7 +54,7 @@ class YouTubePlayer(QWidget):
         topLayout = QHBoxLayout()
         self.layout.addLayout(topLayout)
 
-        self.gen_data = app_gen_data
+        self.gen_data = decorator_gen_data
         self.word_num = 0
 
         self.video_duration = app_config["vid_duration"]
@@ -177,13 +189,3 @@ if __name__ == "__main__":
         print('Player Window Closed')
 
     sys.exit(app.exec_())
-
-
-
-
-
-
-
-
-
-

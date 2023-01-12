@@ -1,5 +1,8 @@
 import eng_gsheet as gs
 import eng_oxford
+import requests
+import json
+import gspread
 
 def get_config():
     config = gs.EngGoogleSheet(sh_name="To-do list", wks_name="conf")
@@ -46,10 +49,10 @@ def gen_data():
         time_end = time_start + vid_duration//1000
         new_url = f"https://www.youtube.com/embed/{video_id}?autoplay=1&mute=0&start={time_start}&end={time_end};rel=0"
 
-        oxford_w = eng_oxford.GetWord(word)
-        synonyms = oxford_w.getSynonyms()
-        definition = oxford_w.getDefinition()
-        example = oxford_w.getExample()
+        oxford_w = ""# eng_oxford.GetWord(word)
+        synonyms = ""# oxford_w.getSynonyms()
+        definition = ""# = oxford_w.getDefinition()
+        example = ""# oxford_w.getExample()
 
         #word, customized_url, list_of_synonyms
         print([word, new_url, synonyms, definition, example])
@@ -58,13 +61,29 @@ def gen_data():
     return main_words
 
 
-"""
-app_gen_data = gen_data()
-word = app_gen_data[0]
-url = app_gen_data[1]
-synonyms = app_gen_data[2] 
-"""
 
-#print(get_config())
+def get_spreedsheet_data(sh_name = "test_doc", wks_name = "test_wks", zone = "A1:B2"):
+    sa = gspread.service_account(filename="../secret_client.json")
+    sh = sa.open(sh_name)
+    wks = sh.worksheet(wks_name)
+    wks_data = wks.batch_get([zone])
+    return wks_data
+# print(get_spreedsheet_data(sh_name = "To-do list", wks_name = "win800webster", zone = 'A4:B403'))
+
+def fit_sublists_to_size(list = [[], []], size = 2, filler = ''):
+    l = len(list)
+    for i in range(0, l):
+        list[i] = list[i] + [filler] * (size - len(list[i]))
+    return list
+# print(fit_sublists_to_size(list = [[1, 2, 3], [1, 2]], size = 3, filler = 'XXX'))
+
+def get_youtube_url(short_url = "https://youtu.be/WSKPrVG3Evs?t=821", vid_duration = 10000):
+    video_id = short_url[17:28]
+    time_start = int(short_url[31::])
+    #vid_duration = int(get_config()["vid_duration"])
+    time_end = time_start + vid_duration // 1000
+    long_url = f"https://www.youtube.com/embed/{video_id}?autoplay=1&mute=0&start={time_start}&end={time_end};rel=0"
+    return long_url
+
 
 
